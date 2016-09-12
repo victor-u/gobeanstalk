@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/victor-u/tcpkeepalive"
 	"io"
 	"net"
 	"strings"
@@ -36,6 +37,13 @@ var (
 	ErrUnknown    = errors.New("unknown error")
 )
 
+// set tcp keepalive
+var (
+	connIdleTime      = 30 * time.Second
+	connAliveCount    = 2
+	connAliveInterval = 5 * time.Second
+)
+
 // Conn represent a connection to beanstalkd server
 type Conn struct {
 	conn      net.Conn
@@ -46,11 +54,16 @@ type Conn struct {
 
 // NewConn create a new connection
 func NewConn(conn net.Conn, addr string) (*Conn, error) {
+	kaConn, _ := tcpkeepalive.EnableKeepAlive(conn)
+	kaConn.SetKeepAliveIdle(connIdleTime)
+	kaConn.SetKeepAliveCount(connAliveCount)
+	kaConn.SetKeepAliveInterval(connAliveInterval)
+
 	c := new(Conn)
-	c.conn = conn
+	c.conn = kaConn
 	c.addr = addr
-	c.bufReader = bufio.NewReader(conn)
-	c.bufWriter = bufio.NewWriter(conn)
+	c.bufReader = bufio.NewReader(kaConn)
+	c.bufWriter = bufio.NewWriter(kaConn)
 
 	return c, nil
 }

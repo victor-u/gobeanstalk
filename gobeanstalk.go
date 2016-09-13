@@ -37,7 +37,7 @@ var (
 	ErrUnknown    = errors.New("unknown error")
 )
 
-// set tcp keepalive
+// set tcp keepalive params
 var (
 	connIdleTime      = 30 * time.Second
 	connAliveCount    = 2

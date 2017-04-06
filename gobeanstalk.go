@@ -5,11 +5,12 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/victor-u/tcpkeepalive"
 	"io"
 	"net"
 	"strings"
 	"time"
+
+	"github.com/victor-u/tcpkeepalive"
 )
 
 const (
@@ -392,9 +393,16 @@ func (c *Conn) Touch(id uint64) error {
 /*
 Quit close network connection.
 */
-func (c *Conn) Quit() {
-	sendFull(c, []byte("quit \r\n"))
-	c.conn.Close()
+func (c *Conn) Quit() error {
+	if _, err := sendFull(c, []byte("quit \r\n")); err != nil {
+		return err
+	}
+
+	if err := c.conn.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Conn) readBody(bodyLen int) ([]byte, error) {
